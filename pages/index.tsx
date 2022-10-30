@@ -15,22 +15,35 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
+import dynamic from 'next/dynamic'
 import React from 'react'
+
+import About from '../components/About'
 
 import { ColorModeContext } from './_app'
 
+const drawerWidth = 270
+
+const Workspace = dynamic(() => import('../components/Workspace'), { ssr: false })
 const currentYear = new Date().getFullYear()
 
 export default function Home(): JSX.Element {
   const { setIsDark } = React.useContext(ColorModeContext)
   const theme = useTheme()
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = event => setIsDark(event.target.checked)
+
   return (
-    <Box>
-      <Drawer anchor="left" variant="permanent">
+    <Box display="flex" height="100%" width="100%">
+      <Drawer
+        anchor="left"
+        sx={{
+          width: `${drawerWidth}px`,
+        }}
+        variant="permanent"
+      >
         <Toolbar>
           <Box paddingX={0} paddingY={2}>
-            <Typography fontFamily="Fira Mono, monospace" fontWeight="bold" letterSpacing="8px" noWrap variant="h3">
+            <Typography fontWeight="bold" letterSpacing="8px" noWrap variant="h3">
               KANADE
             </Typography>
           </Box>
@@ -42,9 +55,10 @@ export default function Home(): JSX.Element {
               <ListItemIcon>
                 <AddIcon />
               </ListItemIcon>
-              <ListItemText>Do stuff</ListItemText>
+              <ListItemText>stuff</ListItemText>
             </ListItemButton>
           </ListItem>
+          <About />
         </List>
         <Stack direction="column-reverse" height="100%" paddingBottom={2}>
           <List>
@@ -68,6 +82,7 @@ export default function Home(): JSX.Element {
           <Divider />
         </Stack>
       </Drawer>
+      <Workspace />
     </Box>
   )
 }

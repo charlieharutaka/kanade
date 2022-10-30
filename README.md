@@ -2,6 +2,10 @@ project sekai keeps giving me 4\* kanade cards so i guess i gotta name my next p
 
 ![Kanade](https://static.wikia.nocookie.net/projectsekai/images/3/34/Stamp0500.png/revision/latest?cb=20220225011345)
 
+## Deployment
+
+view deployment at [kanade.harutaka.dev](https://kanade.harutaka.dev/) :)
+
 ## Getting Started
 
 First, run the development server (with pnpm cuz its cool):
