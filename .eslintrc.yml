@@ -18,6 +18,8 @@ plugins:
   - import
   - '@typescript-eslint'
 rules:
+  new-cap:
+    - off
   no-unused-vars:
     - off
   '@typescript-eslint/no-unused-vars':

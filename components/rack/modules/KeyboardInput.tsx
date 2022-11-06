@@ -1,38 +1,39 @@
 import { Card, CardContent, CardHeader, Chip, Divider, Grid, Typography } from '@mui/material'
-import React, { useContext, useState } from 'react'
+import React from 'react'
+import * as Tone from 'tone'
 
-import AudioReactContext from '../../audio/AudioReactContext'
-import { midiNumberToFrequency, midiNumberToString } from '../../audio/Tuning'
-import useKeyboardInput from '../../audio/useKeyboardInput'
+import useSignal from '../../../utils/useSignal'
+import KeyboardMidiInput from '../../audio/KeyboardMidiInput'
 import { RackUnitSize } from '../Rack'
 
 export default function KeyboardInput(): JSX.Element {
-  const audioCtx = useContext(AudioReactContext)
-  const [cv, gate] = useKeyboardInput()
-  const [[oscillatorNode, gainNode]] = useState(() => {
-    const osc = audioCtx.createOscillator()
-    const gain = audioCtx.createGain()
+  const [[input, osc]] = React.useState(function () {
+    const input = new KeyboardMidiInput()
+    const osc = new Tone.Oscillator(440, 'sine')
+    const gain = new Tone.Gain(0)
+
+    input.note.connect(osc.frequency)
+    input.gate.connect(gain.gain)
 
     osc.connect(gain)
-    gain.connect(audioCtx.destination)
+    gain.toDestination()
 
-    osc.start(0)
-    gain.gain.setValueAtTime(0, 0)
-
-    return [osc, gain] as const
+    return [input, osc, gain] as const
   })
 
-  React.useEffect(
-    () => void (cv && oscillatorNode.frequency.setValueAtTime(midiNumberToFrequency(cv), audioCtx.currentTime)),
-    [cv],
-  )
+  const note = useSignal(input.note)
+  const gate = useSignal(input.gate)
 
   React.useEffect(
-    () =>
-      void (gate
-        ? gainNode.gain.setValueAtTime(1, audioCtx.currentTime)
-        : gainNode.gain.setValueAtTime(0, audioCtx.currentTime)),
-    [gate],
+    function () {
+      input.addEventListeners()
+      osc.start()
+      return function () {
+        input.removeEventListeners()
+        osc.stop()
+      }
+    },
+    [input, osc],
   )
 
   return (
@@ -52,8 +53,8 @@ export default function KeyboardInput(): JSX.Element {
           <Grid item xs={6}>
             <Chip
               color="primary"
-              disabled={!gate}
-              label={gate ? midiNumberToString(cv) : 'OFF'}
+              disabled={gate === 0}
+              label={gate ? Tone.Frequency(note).toNote() : 'OFF'}
               sx={{ width: '100%' }}
             />
           </Grid>
