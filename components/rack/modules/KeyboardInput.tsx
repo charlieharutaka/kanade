@@ -3,20 +3,16 @@ import React from 'react'
 import * as Tone from 'tone'
 
 import useSignal from '../../../utils/useSignal'
+import { WorkspaceContext } from '../../Workspace'
 import KeyboardMidiInput from '../../audio/KeyboardMidiInput'
 import { RackUnitSize } from '../Rack'
 
 export default function KeyboardInput(): JSX.Element {
-  const [[input, osc]] = React.useState(function () {
+  const { graph } = React.useContext(WorkspaceContext)
+  const [[input, osc, gain]] = React.useState(function () {
     const input = new KeyboardMidiInput()
     const osc = new Tone.Oscillator(440, 'sine')
     const gain = new Tone.Gain(0)
-
-    input.note.connect(osc.frequency)
-    input.gate.connect(gain.gain)
-
-    osc.connect(gain)
-    gain.toDestination()
 
     return [input, osc, gain] as const
   })
@@ -27,13 +23,41 @@ export default function KeyboardInput(): JSX.Element {
   React.useEffect(
     function () {
       input.addEventListeners()
+
+      graph.add(input.note)
+      graph.add(input.gate)
+      graph.add(osc.frequency)
+      graph.add(gain.gain)
+      graph.add(osc)
+      graph.add(gain)
+      graph.add(Tone.Destination)
+
+      graph.connect(input.note, osc.frequency)
+      graph.connect(input.gate, gain.gain)
+      graph.connect(osc, gain)
+      graph.connect(gain, Tone.Destination)
+
       osc.start()
       return function () {
         input.removeEventListeners()
+
+        graph.disconnect(input.note, osc.frequency)
+        graph.disconnect(input.gate, gain.gain)
+        graph.disconnect(osc, gain)
+        graph.disconnect(gain, Tone.Destination)
+
+        graph.delete(input.note)
+        graph.delete(input.gate)
+        graph.delete(osc.frequency)
+        graph.delete(gain.gain)
+        graph.delete(osc)
+        graph.delete(gain)
+        graph.delete(Tone.Destination)
+
         osc.stop()
       }
     },
-    [input, osc],
+    [input, osc, gain, graph],
   )
 
   return (
